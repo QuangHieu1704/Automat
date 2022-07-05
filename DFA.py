@@ -49,7 +49,6 @@ class DFA:
                         temp.append(self.get_to_state(state, char))
             new_states = list(set(temp) - set(reachable_states))
             reachable_states.extend(new_states)
-
         unreachable_states = list(set(self.states) - set(reachable_states))
 
         return reachable_states, unreachable_states
@@ -59,34 +58,6 @@ class DFA:
             return True
         
         return False
-
-
-    def dfa_minimization(self):
-        working_states = []
-        new_states = []
-        # Remove unreachable state
-        reachable_state, unreachable_state = self.get_unreachable_state()
-        working_states.extend(reachable_state)
-        # Step 2
-
-        size = len(working_states)
-        marking_arr = np.zeros(shape = (size, size), dtype = np.int32)
-        for i in range(0, size):
-            for j in range(i + 1, size):
-                if self.check_pair_final(working_states[i], working_states[j]):
-                    marking_arr[i][j] = 1
-        for i in range(0, size):
-            for j in range(i + 1, size):
-                if marking_arr[i][j] == 0:
-                    for char in self.alphabets:
-                        p_x = self.get_to_state(working_states[i], char)
-                        q_x = self.get_to_state(working_states[j], char)
-                        i_p_x = working_states.index(p_x)
-                        i_q_x = working_states.index(q_x)
-                        if marking_arr[i_p_x][i_q_x] == 1:
-                            marking_arr[i][j] = 1
-
-        return marking_arr
 
 
     def draw_graph(self):
@@ -110,6 +81,89 @@ class DFA:
         graph.render('{0}'.format("DFA"), view=True)
 
 
+def dfa_minimization(dfa):
+    working_states = []
+    # Remove unreachable state
+    reachable_state, unreachable_state = dfa.get_unreachable_state()
+    working_states = dfa.states
+    for state in unreachable_state:
+        working_states.remove(state)
+
+    # Step 2
+    size = len(working_states)
+    marking_arr = np.zeros(shape = (size, size), dtype = np.int32)
+    for i in range(0, size):
+        for j in range(i + 1, size):
+            if dfa.check_pair_final(working_states[i], working_states[j]):
+                marking_arr[i][j] = 1
+    # Step 3
+    new_marked = 1
+    while new_marked != 0:
+        new_marked = 0
+        for i in range(0, size):
+            for j in range(i + 1, size):
+                if marking_arr[i][j] == 0:
+                    for char in dfa.alphabets:
+                        p_x = dfa.get_to_state(working_states[i], char)
+                        q_x = dfa.get_to_state(working_states[j], char)
+                        i_p_x = working_states.index(p_x)
+                        i_q_x = working_states.index(q_x)
+                        if marking_arr[i_p_x][i_q_x] == 1:
+                            marking_arr[i][j] = 1
+                            new_marked += 1
+    
+    list_combined_state = []
+    for i in range(0, size):
+        temp = []
+        for j in range(i + 1, size):
+            if marking_arr[i][j] == 0:
+                temp.append(working_states[j])
+        if len(temp) != 0:
+            temp.insert(0, working_states[i])
+            list_combined_state.append(temp)
+
+    
+    combine_state = {}
+    for pair_state in list_combined_state:
+        new_state = ""
+        for state in pair_state:
+            new_state += str(state)
+        
+        for state in pair_state:
+            key = state
+            value = new_state
+            combine_state[key] = value
+        
+    new_states = working_states
+    new_alphabets = dfa.alphabets
+    new_init_state = dfa.init_state
+    new_final_states = dfa.final_states
+    new_transition_func = dfa.transition_func
+
+    for old_state, new_state in combine_state.items():
+        for i in range(len(new_states)):
+            if new_states[i] == old_state:
+                new_states[i] = new_state
+    new_states = list(dict.fromkeys(new_states))
+
+    for old_state, new_state in combine_state.items():
+        if old_state == new_init_state:
+            new_init_state = new_state
+            break
+    
+    for old_state, new_state in combine_state.items():
+        for k1, v1 in new_transition_func.items():
+            if k1 == old_state:
+                k1 = new_states
+            for k2, v2 in v1.items():
+                if v2 == old_state:
+                    v2 = new_state
+
+    new_dfa = DFA(new_states, new_alphabets, new_init_state, new_final_states, new_transition_func)
+
+
+    return new_dfa
+
 if __name__ == "__main__":
     states = ["1", "2", "3", "4", "5", "6"]
     alphabets = ["a", "b"]
@@ -125,7 +179,8 @@ if __name__ == "__main__":
         }
 
     dfa = DFA(states, alphabets, init_state, final_states, transition_func)
-    print(dfa.dfa_minimization())
+    new_dfa = dfa_minimization(dfa)
+    print(new_dfa.transition_func)
     # dfa.draw_graph()
 
     # str = "0110"
