@@ -133,12 +133,13 @@ def dfa_minimization(dfa):
             key = state
             value = new_state
             combine_state[key] = value
-        
+    
     new_states = working_states
     new_alphabets = dfa.alphabets
     new_init_state = dfa.init_state
     new_final_states = dfa.final_states
-    new_transition_func = dfa.transition_func
+    old_transition_func = dfa.transition_func
+    new_transition_func = {}
 
     for old_state, new_state in combine_state.items():
         for i in range(len(new_states)):
@@ -151,13 +152,20 @@ def dfa_minimization(dfa):
             new_init_state = new_state
             break
     
-    for old_state, new_state in combine_state.items():
-        for k1, v1 in new_transition_func.items():
-            if k1 == old_state:
-                k1 = new_states
-            for k2, v2 in v1.items():
-                if v2 == old_state:
-                    v2 = new_state
+    for k1, v1 in old_transition_func.items():
+        for old_state1, new_state1 in combine_state.items():
+            if k1 == old_state1:
+                k1 = new_state1
+                break
+        sub_dict = {}
+        for k2, v2 in v1.items():
+            for old_state2, new_state2 in combine_state.items():
+                if v2 == old_state2:
+                    v2 = new_state2
+                    break
+            sub_dict[k2] = v2
+        new_transition_func[k1] = sub_dict
+
 
     new_dfa = DFA(new_states, new_alphabets, new_init_state, new_final_states, new_transition_func)
 
@@ -181,6 +189,7 @@ if __name__ == "__main__":
     dfa = DFA(states, alphabets, init_state, final_states, transition_func)
     new_dfa = dfa_minimization(dfa)
     print(new_dfa.transition_func)
+    new_dfa.draw_graph()
     # dfa.draw_graph()
 
     # str = "0110"
