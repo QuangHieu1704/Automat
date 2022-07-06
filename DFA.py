@@ -12,6 +12,9 @@ class DFA:
 
 
     def accepts(self, str):
+        for char in str:
+            if char not in self.alphabets:
+                return False
         init_state = self.init_state
         for i in range(len(str)):
             if i == 0:
