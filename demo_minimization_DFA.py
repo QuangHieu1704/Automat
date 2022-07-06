@@ -20,7 +20,3 @@ if __name__ == "__main__":
     # dfa.draw_graph()
     new_dfa = dfa_minimization(dfa)
     new_dfa.draw_graph()
-    # dfa.draw_graph()
-
-    # str = "0110"
-    # print(dfa.accepts(str))
