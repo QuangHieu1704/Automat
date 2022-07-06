@@ -1,17 +1,17 @@
 from DFA import DFA
-from NFA import NFA
+from NFA import NFA, nfa_to_dfa
 
 
 if __name__ == "__main__":
-    states = ["A", "B", "C", "D"]
+    states = ["p0", "p1", "p2"]
     alphabets = ["a", "b", "c"]
-    init_state = "A"
-    final_states = ["D"]
-    transition_func = [
-        ["A", "a", "A"], ["A", "e", "B"], ["A", "e", "C"],
-        ["B", "b", "B"], ["B", "b", "D"],
-        ["C", "c", "C"], ["C", "c", "D"]
-    ]
-
+    init_state = "p0"
+    final_states = ["p1", "p2"]
+    transition_func = {
+        "p0": {"a": ["p1"], "b": ["p1", "p2"], "c": ["p2"]},
+        "p1": {"a": ["p2"], "b": ["@"], "c": ["p0", "p2"]},
+        "p2": {"a": ["p1"], "b": ["p1"], "c": ["p2"]}
+    }
     nfa = NFA(states, alphabets, init_state, final_states, transition_func)
-    nfa.draw_graph()
+    dfa = nfa_to_dfa(nfa)
+    dfa.draw_graph()
