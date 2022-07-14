@@ -11,6 +11,7 @@ class DFA:
         self.transition_func = transition_func # dict
 
 
+    # DFA accepts string
     def accepts(self, str):
         for char in str:
             if char not in self.alphabets:
@@ -28,6 +29,7 @@ class DFA:
         return new_state in self.final_states
 
 
+    # From a current state, travel to next state by value
     def get_to_state(self, curr_state, value):
         for k1, v1 in self.transition_func.items():
             if k1 == curr_state:
@@ -37,6 +39,7 @@ class DFA:
         return None
 
 
+    # Get unreachable state
     def get_unreachable_state(self):
         unreachable_states = []
         reachable_states = []
@@ -55,6 +58,7 @@ class DFA:
 
         return reachable_states, unreachable_states
 
+    # Check if two states are final states or not 
     def check_pair_final(self, state1, state2):
         if (state1 in self.final_states and state2 not in self.final_states) or (state2 in self.final_states and state1 not in self.final_states):
             return True
@@ -62,6 +66,7 @@ class DFA:
         return False
 
 
+    # Draw graph by graphviz
     def draw_graph(self):
         graph = Digraph(format = "svg")
         graph.attr('node', shape='point')
@@ -81,6 +86,83 @@ class DFA:
             for value, new_state in trans_func.items():
                 graph.edge(str(curr_state), str(new_state), label = str(value))
         graph.render('{0}'.format("DFA"), view=True)
+
+
+    def get_intermediate_states(self):
+        active_states = []
+        active_states.append(self.init_state)
+        active_states.extend(self.final_states)
+        return [state for state in self.states if state not in active_states]
+
+
+    def get_precdecessors(self, state):
+        precdecessors = []
+        for curr_state, trans_func in self.transition_func.items():
+            for value, next_state in trans_func.items():
+                if next_state == state:
+                    precdecessors.append(curr_state)
+        precdecessors = list(dict.fromkeys(precdecessors))
+        
+        return precdecessors
+
+    def get_successors(self, state):
+        successors = []
+        for curr_state, trans_func in self.transition_func.items():
+            if curr_state  == state:
+                for value, next_state in trans_func.items():
+                    successors.append(next_state)
+        successors = list(dict.fromkeys(successors))
+
+        return successors
+
+    def get_if_loop(self, state):
+        
+
+
+    def get_regex(self):
+        # Handle if init state has incoming state
+        has_init_incoming = False
+        for curr_state, trans_func in self.transition_func.items():
+            for value, next_state in trans_func.items():
+                if next_state == self.init_state:
+                    has_init_incoming = True
+                    old_init_state = self.init_state
+                    new_init_state = old_init_state + "'"
+                    self.states.insert(0, new_init_state)
+                    self.init_state = new_init_state
+                    self.transition_func[new_init_state] = {"@": old_init_state}
+                    break
+            if has_init_incoming is True:
+                break
+        
+        # Handle final outgoing state
+        has_final_outgoing = False
+        if len(self.final_states) > 1:
+            has_final_outgoing = True
+        else: 
+            for curr_state, trans_func in self.transition_func.items():
+                if curr_state == self.final_states[0]:
+                    has_final_outgoing = True
+        if has_final_outgoing:
+            new_final_state = "F"
+            self.states.append(new_final_states)
+            old_final_states = self.final_states
+            self.final_states = [new_final_state]
+            for old_final in old_final_states:
+                for curr_state, trans_func in self.transition_func.items():
+                    if curr_state == old_final:
+                        trans_func["@"] = new_final_state
+        # Convert to ReGex
+        intermediate_states = self.get_intermediate_states()
+        for inter in intermediate_states:
+            precdecessors = self.get_precdecessors(inter)
+            successors = self.get_successors(inter)
+
+            for prec in precdecessors:
+                for succ in successors:
+                    inter_loop = 
+                    
+
 
 
 def dfa_minimization(dfa):
